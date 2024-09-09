@@ -58,8 +58,7 @@ export const actions: Actions = {
 				maxAge: 60 * 60 * 24 * 30 // 30 days
 			});
 
-			// Redirect to a protected route or dashboard
-			redirect(302, '/dashboard');
+			console.log('User created:', newUser);
 		} catch (error) {
 			console.error('Registration error:', error);
 			return fail(500, {
@@ -67,5 +66,8 @@ export const actions: Actions = {
 				data: { name, email }
 			});
 		}
+
+		// Redirect to a protected route or dashboard
+		throw redirect(303, '/dashboard');
 	}) satisfies Action
 };

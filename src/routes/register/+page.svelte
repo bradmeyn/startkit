@@ -8,6 +8,7 @@
 
 	import { registerSchema } from '$lib/schemas';
 	import { z } from 'zod';
+	import { goto } from '$app/navigation';
 	let form: ActionData = $props();
 	let isLoading = $state(false);
 	let serverError = $state('');
@@ -76,13 +77,13 @@
 
 				return async ({ result }) => {
 					if (result.type === 'redirect') {
+						console.log(result);
+						goto(result.location);
 						// Maybe show a "Registration successful!" message
 						// The redirect will happen automatically
-						alert('Registration successful!');
 					} else if (result.type === 'failure') {
 						// Handle errors as before
-						serverError = result.error;
-						alert('Registration failed!');
+						console.error(result);
 					}
 				};
 			}}
@@ -99,7 +100,7 @@
 							on:input={handleInput('name')}
 						/>
 						{#if fieldErrors.name}
-							<p class="error">{fieldErrors.name}</p>
+							{@render error(fieldErrors.name)}
 						{/if}
 					</div>
 
@@ -113,7 +114,7 @@
 							on:input={handleInput('email')}
 						/>
 						{#if fieldErrors.email}
-							<p class="error">{fieldErrors.email}</p>
+							{@render error(fieldErrors.email)}
 						{/if}
 					</div>
 
@@ -127,7 +128,7 @@
 							on:input={handleInput('password')}
 						/>
 						{#if fieldErrors.password}
-							<p class="error">{fieldErrors.password}</p>
+							{@render error(fieldErrors.password)}
 						{/if}
 					</div>
 
@@ -141,7 +142,7 @@
 							on:input={handleInput('confirmPassword')}
 						/>
 						{#if fieldErrors.confirmPassword}
-							<p class="error">{fieldErrors.confirmPassword}</p>
+							{@render error(fieldErrors.confirmPassword)}
 						{/if}
 					</div>
 				</div>
@@ -152,3 +153,7 @@
 		</form>
 	</Card.Root>
 </main>
+
+{#snippet error(message: string)}
+	<p class="text-xs text-red-500">{message}</p>
+{/snippet}
