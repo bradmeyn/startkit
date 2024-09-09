@@ -1,0 +1,6 @@
+// src/lib/prisma.ts
+
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient();
+export default db;

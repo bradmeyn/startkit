@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clients   Client[] // Add this line to establish the relationship
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   // Add this line to store the foreign key
+  user      User     @relation(fields: [userId], references: [id]) // Add this line to define the relationship
+}
