@@ -8,16 +8,13 @@ export const actions: Actions = {
 	default: (async ({ request, cookies }) => {
 		const formData = Object.fromEntries(await request.formData());
 
-		console.log('Form data:', formData);
-		// Validate the form data using Zod
 		const result = registerSchema.safeParse(formData);
 
 		if (!result.success) {
 			// If validation fails, return the errors
 			console.log('Validation errors:', result.error.flatten().fieldErrors);
 			return fail(400, {
-				error: 'Invalid form data',
-				data: formData
+				error: 'Invalid form data'
 			});
 		}
 
@@ -29,10 +26,8 @@ export const actions: Actions = {
 				where: { email }
 			});
 			if (existingUser) {
-				console.log('User already exists:', existingUser);
 				return fail(400, {
-					error: 'A account with this email already exists',
-					data: { name, email }
+					error: 'A account with this email already exists'
 				});
 			}
 
@@ -57,17 +52,14 @@ export const actions: Actions = {
 				secure: process.env.NODE_ENV === 'production',
 				maxAge: 60 * 60 * 24 * 30 // 30 days
 			});
-
-			console.log('User created:', newUser);
 		} catch (error) {
 			console.error('Registration error:', error);
 			return fail(500, {
-				errors: { server: 'An error occurred during registration. Please try again later.' },
-				data: { name, email }
+				error: 'An error occurred while registering'
 			});
 		}
 
 		// Redirect to a protected route or dashboard
-		throw redirect(303, '/dashboard');
+		redirect(303, '/dashboard');
 	}) satisfies Action
 };

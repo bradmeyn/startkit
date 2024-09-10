@@ -1,26 +1,23 @@
 <script lang="ts">
-	import type { ActionData } from './$types';
+	import type { ActionData, PageData } from './$types';
 	import { enhance } from '$app/forms';
 	import * as Card from '$lib/components/ui/card';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import Label from '$lib/components/ui/label/label.svelte';
-
 	import { registerSchema } from '$lib/schemas';
 	import { z } from 'zod';
-	import { goto } from '$app/navigation';
-	let form: ActionData = $props();
+	import type { SubmitFunction } from '@sveltejs/kit';
+
+	type Props = {
+		form: ActionData;
+		data: PageData;
+	};
+
+	let { form }: Props = $props();
 	let isLoading = $state(false);
 	let serverError = $state('');
-
 	let fieldErrors = $state({
-		name: '',
-		email: '',
-		password: '',
-		confirmPassword: ''
-	});
-
-	let formData = $state({
 		name: '',
 		email: '',
 		password: '',
@@ -37,6 +34,34 @@
 		const { fieldErrors: mapped } = errors.flatten();
 		fieldErrors = { ...fieldErrors, ...mapped };
 	}
+
+	const submit: SubmitFunction = async ({ formData, cancel }) => {
+		const validation = registerSchema.safeParse({
+			name: formData.get('name'),
+			email: formData.get('email'),
+			password: formData.get('password'),
+			confirmPassword: formData.get('confirmPassword')
+		});
+
+		if (!validation.success) {
+			mapZodErrorsToFieldErrors(validation.error);
+			cancel();
+			return;
+		}
+
+		return async ({ result, update }) => {
+			isLoading = true;
+			console.log(result);
+			switch (result.type) {
+				case 'failure':
+					isLoading = false;
+					serverError = result?.data?.error || 'An error occurred';
+				default:
+					break;
+			}
+			await update();
+		};
+	};
 </script>
 
 <main>
@@ -47,58 +72,12 @@
 		<Card.Header>
 			<Card.Title>Sign up</Card.Title>
 		</Card.Header>
-		<form
-			method="POST"
-			action="./register"
-			use:enhance={({ formData, cancel }) => {
-				isLoading = true;
-				const validation = registerSchema.safeParse({
-					name: formData.get('name'),
-					email: formData.get('email'),
-					password: formData.get('password'),
-					confirmPassword: formData.get('confirmPassword')
-				});
-
-				if (!validation.success) {
-					mapZodErrorsToFieldErrors(validation.error);
-					isLoading = false;
-					cancel();
-					return;
-				}
-
-				// Clear all errors before submitting
-				fieldErrors = {
-					name: '',
-					email: '',
-					password: '',
-					confirmPassword: ''
-				};
-				isLoading = false;
-
-				return async ({ result }) => {
-					if (result.type === 'redirect') {
-						console.log(result);
-						goto(result.location);
-						// Maybe show a "Registration successful!" message
-						// The redirect will happen automatically
-					} else if (result.type === 'failure') {
-						// Handle errors as before
-						console.error(result);
-					}
-				};
-			}}
-		>
+		<form method="POST" action="./register" use:enhance={submit}>
 			<Card.Content>
 				<div class="space-y-4">
 					<div>
 						<Label for="name">Name</Label>
-						<Input
-							type="text"
-							id="name"
-							name="name"
-							bind:value={formData.name}
-							on:input={handleInput('name')}
-						/>
+						<Input type="text" id="name" name="name" on:input={handleInput('name')} />
 						{#if fieldErrors.name}
 							{@render error(fieldErrors.name)}
 						{/if}
@@ -106,13 +85,7 @@
 
 					<div>
 						<Label for="email">Email</Label>
-						<Input
-							type="email"
-							id="email"
-							name="email"
-							bind:value={formData.email}
-							on:input={handleInput('email')}
-						/>
+						<Input type="email" id="email" name="email" on:input={handleInput('email')} />
 						{#if fieldErrors.email}
 							{@render error(fieldErrors.email)}
 						{/if}
@@ -124,7 +97,6 @@
 							type="password"
 							id="password"
 							name="password"
-							bind:value={formData.password}
 							on:input={handleInput('password')}
 						/>
 						{#if fieldErrors.password}
@@ -138,7 +110,6 @@
 							type="password"
 							id="confirmPassword"
 							name="confirmPassword"
-							bind:value={formData.confirmPassword}
 							on:input={handleInput('confirmPassword')}
 						/>
 						{#if fieldErrors.confirmPassword}
