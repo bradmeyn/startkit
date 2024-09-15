@@ -3,7 +3,7 @@
 </script>
 
 <footer
-	class=" bg-neutral text-neutral-content mt-auto items-center justify-center p-4 text-slate-100"
+	class=" bg-neutral text-neutral-content text-neutral-content mt-auto items-center justify-center p-4"
 >
 	<div class="text-center">
 		<p class="text-xs">
